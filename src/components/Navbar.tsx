@@ -1,14 +1,13 @@
-import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, X, Shield, LogOut, User as UserIcon } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
+import { isAdmin } from '@/lib/admin';
+import { useEffect, useState } from 'react';
 
 export default function Navbar() {
-  const [open, setOpen] = useState(false);
-  const { user, signOut } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
-
+  const { user, signOut } = useAuth();
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  
   const links = [
     { to: '/', label: 'Home' },
     { to: '/realms', label: 'Realms' },
@@ -19,133 +18,158 @@ export default function Navbar() {
   const isActive = (path: string) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
 
+  useEffect(() => {
+    (async () => {
+      if (user) {
+        console.log('Checking admin status for user:', user.email);
+        const adminCheck = await isAdmin();
+        console.log('Admin check result:', adminCheck);
+        setIsAuthorized(adminCheck);
+      } else {
+        console.log('No user logged in');
+        setIsAuthorized(false);
+      }
+    })();
+  }, [user]);
+
   const handleSignOut = async () => {
     await signOut();
-    navigate('/');
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-dark-700/95 backdrop-blur-md border-b border-gold-500/20">
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2 group" onClick={() => setOpen(false)}>
-            <Shield className="w-7 h-7 text-gold-400 group-hover:text-gold-300 transition-colors" />
-            <span className="font-display font-bold text-lg text-gold-300 tracking-wide">
-              Azeroth Eternal
-            </span>
-          </Link>
+    <header style={{ 
+      padding: '0 20px', 
+      borderBottom: '1px solid #d4af37', 
+      backgroundColor: '#0c0c0d',
+      position: 'sticky',
+      top: 0,
+      zIndex: 50
+    }}>
+      <nav style={{ 
+        maxWidth: '1200px', 
+        margin: '0 auto', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between',
+        height: '64px'
+      }}>
+        <Link 
+          to="/" 
+          style={{ 
+            textDecoration: 'none', 
+            color: '#d4af37', 
+            fontSize: '20px', 
+            fontWeight: 'bold',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+        >
+          <span>🛡️</span>
+          <span>Azeroth Eternal</span>
+        </Link>
 
-          <div className="hidden md:flex items-center gap-1">
-            {links.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={`px-4 py-2 font-display text-sm font-medium tracking-wide rounded-sm transition-all ${
-                  isActive(link.to)
-                    ? 'text-gold-300 bg-gold-500/10'
-                    : 'text-stone-400 hover:text-gold-300 hover:bg-gold-500/5'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {links.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              style={{
+                textDecoration: 'none',
+                color: isActive(link.to) ? '#d4af37' : '#a0a0a0',
+                padding: '8px 16px',
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontWeight: '500',
+                backgroundColor: isActive(link.to) ? 'rgba(212, 175, 55, 0.1)' : 'transparent',
+                transition: 'all 0.3s'
+              }}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
 
-          <div className="hidden md:flex items-center gap-3">
-            {user ? (
-              <>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          {user ? (
+            <>
+              {isAuthorized && (
                 <Link
-                  to="/account"
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-display font-medium text-gold-300 border border-gold-500/30 rounded-sm hover:bg-gold-500/10 transition-all"
+                  to="/admin"
+                  style={{
+                    textDecoration: 'none',
+                    color: '#d4af37',
+                    padding: '8px 16px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    border: '1px solid #d4af37',
+                    borderRadius: '4px'
+                  }}
                 >
-                  <UserIcon className="w-4 h-4" />
-                  My Account
+                  Admin
                 </Link>
-                <button
-                  onClick={handleSignOut}
-                  className="flex items-center gap-2 px-4 py-2 text-sm font-display font-medium text-stone-400 hover:text-ember-400 transition-colors"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Sign Out
-                </button>
-              </>
-            ) : (
-              <>
-                <Link to="/login" className="px-4 py-2 text-sm font-display font-medium text-stone-300 hover:text-gold-300 transition-colors">
-                  Sign In
-                </Link>
-                <Link to="/register" className="btn-gold text-sm py-2">
-                  Create Account
-                </Link>
-              </>
-            )}
-          </div>
-
-          <button
-            className="md:hidden text-gold-300 p-2"
-            onClick={() => setOpen(!open)}
-            aria-label="Toggle menu"
-          >
-            {open ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+              )}
+              <Link
+                to="/account"
+                style={{
+                  textDecoration: 'none',
+                  color: '#d4af37',
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  border: '1px solid #d4af37',
+                  borderRadius: '4px'
+                }}
+              >
+                My Account
+              </Link>
+              <button
+                onClick={handleSignOut}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: 'transparent',
+                  color: '#d0d0d0',
+                  border: 'none',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer'
+                }}
+              >
+                Sign Out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                style={{
+                  textDecoration: 'none',
+                  color: '#d0d0d0',
+                  padding: '8px 16px',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/register"
+                style={{
+                  textDecoration: 'none',
+                  color: '#0f0f10',
+                  backgroundColor: '#d4af37',
+                  padding: '8px 16px',
+                  borderRadius: '4px',
+                  fontSize: '14px',
+                  fontWeight: 'bold'
+                }}
+              >
+                Create Account
+              </Link>
+            </>
+          )}
         </div>
       </nav>
-
-      {open && (
-        <div className="md:hidden border-t border-gold-500/20 bg-dark-700">
-          <div className="px-4 py-3 space-y-1">
-            {links.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                onClick={() => setOpen(false)}
-                className={`block px-4 py-3 font-display text-sm font-medium rounded-sm ${
-                  isActive(link.to)
-                    ? 'text-gold-300 bg-gold-500/10'
-                    : 'text-stone-400 hover:text-gold-300 hover:bg-gold-500/5'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-            <div className="divider-gold my-2" />
-            {user ? (
-              <>
-                <Link
-                  to="/account"
-                  onClick={() => setOpen(false)}
-                  className="block px-4 py-3 font-display text-sm font-medium text-gold-300"
-                >
-                  My Account
-                </Link>
-                <button
-                  onClick={() => { setOpen(false); handleSignOut(); }}
-                  className="block w-full text-left px-4 py-3 font-display text-sm font-medium text-stone-400"
-                >
-                  Sign Out
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  onClick={() => setOpen(false)}
-                  className="block px-4 py-3 font-display text-sm font-medium text-stone-300"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  to="/register"
-                  onClick={() => setOpen(false)}
-                  className="block px-4 py-3 font-display text-sm font-medium text-gold-300"
-                >
-                  Create Account
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      )}
     </header>
   );
 }

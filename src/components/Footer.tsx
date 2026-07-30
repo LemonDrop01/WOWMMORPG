@@ -1,62 +1,48 @@
 import { Link } from 'react-router-dom';
-import { Shield, Github, MessageCircle, Server } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="border-t border-gold-500/20 bg-dark-700 mt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="md:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <Shield className="w-6 h-6 text-gold-400" />
-              <span className="font-display font-bold text-lg text-gold-300">Azeroth Eternal</span>
+    <footer style={{ 
+      borderTop: '1px solid #d4af37', 
+      backgroundColor: '#0c0c0d', 
+      marginTop: '80px',
+      padding: '48px 20px'
+    }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+          gap: '32px',
+          marginBottom: '32px'
+        }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+              <span>🛡️</span>
+              <span style={{ color: '#d4af37', fontSize: '18px', fontWeight: 'bold' }}>Azeroth Eternal</span>
             </div>
-            <p className="text-stone-400 text-sm max-w-md leading-relaxed">
+            <p style={{ color: '#a0a0a0', fontSize: '14px', lineHeight: '1.6', maxWidth: '300px' }}>
               A blizzlike World of Warcraft: Wrath of the Lich King private server. Experience
               the full 3.3.5a content with an active community and dedicated staff.
             </p>
-            <div className="flex gap-3 mt-4">
-              <a
-                href="#"
-                className="w-10 h-10 flex items-center justify-center border border-gold-500/30 rounded-sm text-gold-400 hover:bg-gold-500/10 transition-all"
-                aria-label="Discord"
-              >
-                <MessageCircle className="w-5 h-5" />
-              </a>
-              <a
-                href="#"
-                className="w-10 h-10 flex items-center justify-center border border-gold-500/30 rounded-sm text-gold-400 hover:bg-gold-500/10 transition-all"
-                aria-label="GitHub"
-              >
-                <Github className="w-5 h-5" />
-              </a>
-              <a
-                href="#"
-                className="w-10 h-10 flex items-center justify-center border border-gold-500/30 rounded-sm text-gold-400 hover:bg-gold-500/10 transition-all"
-                aria-label="Server Status"
-              >
-                <Server className="w-5 h-5" />
-              </a>
-            </div>
           </div>
 
           <div>
-            <h3 className="font-display font-semibold text-gold-300 mb-4 text-sm uppercase tracking-wider">
+            <h3 style={{ color: '#d4af37', fontSize: '14px', fontWeight: 'bold', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '1px' }}>
               Quick Links
             </h3>
-            <ul className="space-y-2 text-sm">
-              <li><Link to="/realms" className="text-stone-400 hover:text-gold-300 transition-colors">Realm Status</Link></li>
-              <li><Link to="/news" className="text-stone-400 hover:text-gold-300 transition-colors">News & Updates</Link></li>
-              <li><Link to="/connect" className="text-stone-400 hover:text-gold-300 transition-colors">How to Connect</Link></li>
-              <li><Link to="/register" className="text-stone-400 hover:text-gold-300 transition-colors">Create Account</Link></li>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <li><Link to="/realms" style={{ color: '#a0a0a0', textDecoration: 'none', fontSize: '14px' }}>Realm Status</Link></li>
+              <li><Link to="/news" style={{ color: '#a0a0a0', textDecoration: 'none', fontSize: '14px' }}>News & Updates</Link></li>
+              <li><Link to="/connect" style={{ color: '#a0a0a0', textDecoration: 'none', fontSize: '14px' }}>How to Connect</Link></li>
+              <li><Link to="/register" style={{ color: '#a0a0a0', textDecoration: 'none', fontSize: '14px' }}>Create Account</Link></li>
             </ul>
           </div>
 
           <div>
-            <h3 className="font-display font-semibold text-gold-300 mb-4 text-sm uppercase tracking-wider">
+            <h3 style={{ color: '#d4af37', fontSize: '14px', fontWeight: 'bold', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '1px' }}>
               Server Info
             </h3>
-            <ul className="space-y-2 text-sm text-stone-400">
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px', color: '#a0a0a0', fontSize: '14px' }}>
               <li>Expansion: WotLK 3.3.5a</li>
               <li>XP Rate: x1 Blizzlike</li>
               <li>Location: Frankfurt, EU</li>
@@ -65,9 +51,15 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="divider-gold my-8" />
-
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-stone-500">
+        <div style={{ 
+          borderTop: '1px solid rgba(212, 175, 55, 0.3)', 
+          paddingTop: '24px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          fontSize: '12px',
+          color: '#606060'
+        }}>
           <p>Azeroth Eternal is a non-profit fan project. World of Warcraft is a trademark of Blizzard Entertainment.</p>
           <p>This server is not affiliated with or endorsed by Blizzard Entertainment.</p>
         </div>

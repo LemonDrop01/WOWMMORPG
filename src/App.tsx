@@ -4,31 +4,39 @@ import Layout from '@/components/Layout';
 import HomePage from '@/pages/HomePage';
 import RealmsPage from '@/pages/RealmsPage';
 import NewsPage from '@/pages/NewsPage';
-import NewsDetailPage from '@/pages/NewsDetailPage';
 import ConnectPage from '@/pages/ConnectPage';
 import RegisterPage from '@/pages/RegisterPage';
 import LoginPage from '@/pages/LoginPage';
 import AccountPage from '@/pages/AccountPage';
+import AdminPanel from '@/pages/AdminPanel';
+import AdminRealms from '@/pages/admin/AdminRealms';
+import AdminNews from '@/pages/admin/AdminNews';
+import AdminUsers from '@/pages/admin/AdminUsers';
+import AdminServerInfo from '@/pages/admin/AdminServerInfo';
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
+    <BrowserRouter>
+      <AuthProvider>
         <Layout>
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/realms" element={<RealmsPage />} />
             <Route path="/news" element={<NewsPage />} />
-            <Route path="/news/:slug" element={<NewsDetailPage />} />
             <Route path="/connect" element={<ConnectPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/account" element={<AccountPage />} />
-            <Route path="*" element={<HomePage />} />
+            <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/admin/realms" element={<AdminRealms />} />
+            <Route path="/admin/news" element={<AdminNews />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/server-info" element={<AdminServerInfo />} />
+            <Route path="*" element={<div style={{ padding: '20px', color: 'white' }}><h1>404</h1><p>Page not found</p></div>} />
           </Routes>
         </Layout>
-      </BrowserRouter>
-    </AuthProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 

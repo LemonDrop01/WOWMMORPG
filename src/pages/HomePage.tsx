@@ -1,12 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import {
-  Shield, Users, Server, Zap, Swords, ScrollText,
-  ChevronRight, Activity, Globe, Star,
-} from 'lucide-react';
 import { supabase, type Realm, type NewsArticle, type ServerInfo } from '@/lib/supabase';
-import RealmCard from '@/components/RealmCard';
-import NewsCard from '@/components/NewsCard';
 
 export default function HomePage() {
   const [realms, setRealms] = useState<Realm[]>([]);
@@ -16,233 +9,338 @@ export default function HomePage() {
 
   useEffect(() => {
     (async () => {
-      const [realmsRes, newsRes, infoRes] = await Promise.all([
-        supabase.from('realms').select('*').order('display_order'),
-        supabase.from('news').select('*').eq('is_published', true).order('published_at', { ascending: false }).limit(3),
-        supabase.from('server_info').select('*').order('category, display_order'),
-      ]);
-      setRealms(realmsRes.data ?? []);
-      setNews(newsRes.data ?? []);
-      setInfo(infoRes.data ?? []);
-      setLoading(false);
+      try {
+        const [realmsRes, newsRes, infoRes] = await Promise.all([
+          supabase.from('realms').select('*').order('display_order'),
+          supabase.from('news').select('*').eq('is_published', true).order('published_at', { ascending: false }).limit(3),
+          supabase.from('server_info').select('*').order('category, display_order'),
+        ]);
+        
+        if (realmsRes.error) throw new Error(`Realms: ${realmsRes.error.message}`);
+        if (newsRes.error) throw new Error(`News: ${newsRes.error.message}`);
+        if (infoRes.error) throw new Error(`Server Info: ${infoRes.error.message}`);
+        
+        setRealms(realmsRes.data ?? []);
+        setNews(newsRes.data ?? []);
+        setInfo(infoRes.data ?? []);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
   const totalPlayers = realms.reduce((sum, r) => sum + r.players_online, 0);
   const onlineRealms = realms.filter((r) => r.online).length;
   const infoMap = Object.fromEntries(info.map((i) => [i.key, i.value]));
-
-  const features = [
-    { icon: Shield, title: 'Blizzlike Content', desc: 'Full Wrath of the Lich King 3.3.5a content with all quests, dungeons, and raids fully scripted.' },
-    { icon: Swords, title: 'Active PvP', desc: 'Battlegrounds, arenas, and world PvP with regular arena seasons and rewards.' },
-    { icon: Users, title: 'Growing Community', desc: 'Thousands of active players and a friendly, helpful community on Discord.' },
-    { icon: Zap, title: 'Stable & Fast', desc: '99.9% uptime with dedicated hardware in Frankfurt, Germany for low latency.' },
-    { icon: ScrollText, title: 'Regular Updates', desc: 'Continuous development with bug fixes, new content, and quality of life improvements.' },
-    { icon: Star, title: 'Professional Staff', desc: 'Experienced GMs and developers who actively maintain and improve the server.' },
-  ];
+  
+  // Use the total_players from server_info if available, otherwise calculate from realms
+  const displayTotalPlayers = infoMap.total_players ? parseInt(infoMap.total_players) : totalPlayers;
 
   return (
-    <div>
+    <div style={{ padding: '40px 20px', color: 'white' }}>
       {/* Hero */}
-      <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0">
-          <img
-            src="https://images.pexels.com/photos/3052361/pexels-photo-3052361.jpeg"
-            alt="Fantasy landscape"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-dark-800/70 via-dark-700/60 to-dark-600" />
-          <div className="absolute inset-0 bg-gradient-to-r from-dark-800/80 via-transparent to-dark-800/80" />
+      <div style={{ 
+        minHeight: '70vh', 
+        display: 'flex', 
+        flexDirection: 'column',
+        alignItems: 'center', 
+        justifyContent: 'center',
+        textAlign: 'center',
+        marginBottom: '40px'
+      }}>
+        <div style={{ 
+          display: 'inline-flex', 
+          alignItems: 'center', 
+          gap: '8px', 
+          padding: '8px 16px', 
+          marginBottom: '24px',
+          border: '1px solid rgba(212, 175, 55, 0.3)',
+          borderRadius: '20px',
+          backgroundColor: 'rgba(12, 12, 13, 0.6)'
+        }}>
+          <span style={{ 
+            width: '8px', 
+            height: '8px', 
+            borderRadius: '50%', 
+            backgroundColor: '#4ade80',
+            animation: 'pulse 2s infinite'
+          }} />
+          <span style={{ color: '#e5c56d', fontSize: '14px' }}>
+            {onlineRealms} Realms Online · {totalPlayers} Players In-Game
+          </span>
         </div>
 
-        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto py-20">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 mb-6 border border-gold-500/30 rounded-full bg-dark-700/60 backdrop-blur-sm animate-fade-in">
-            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            <span className="text-gold-300 text-sm font-display tracking-wide">
-              {onlineRealms} Realms Online · {totalPlayers} Players In-Game
-            </span>
-          </div>
+        <h1 style={{ 
+          fontSize: '48px', 
+          fontWeight: 'bold', 
+          marginBottom: '16px', 
+          color: '#d4af37',
+          textShadow: '0 4px 20px rgba(0,0,0,0.5)'
+        }}>
+          Azeroth Eternal
+        </h1>
+        <p style={{ fontSize: '24px', marginBottom: '16px', color: '#e5c56d' }}>
+          Wrath of the Lich King · 3.3.5a
+        </p>
+        <p style={{ fontSize: '16px', marginBottom: '32px', color: '#a0a0a0', maxWidth: '600px' }}>
+          Experience the full Wrath of the Lich King expansion the way it was meant to be played.
+          Blizzlike rates, fully scripted content, and an active community await you in Northrend.
+        </p>
 
-          <h1 className="font-display text-5xl md:text-7xl font-black text-gold-200 mb-6 animate-fade-in-up tracking-tight drop-shadow-2xl">
-            Azeroth Eternal
-          </h1>
-          <p className="text-xl md:text-2xl text-stone-300 mb-3 font-display tracking-wide">
-            Wrath of the Lich King · 3.3.5a
-          </p>
-          <p className="text-stone-400 text-base md:text-lg max-w-2xl mx-auto mb-10 leading-relaxed">
-            Experience the full Wrath of the Lich King expansion the way it was meant to be played.
-            Blizzlike rates, fully scripted content, and an active community await you in Northrend.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/register" className="btn-gold text-base px-8 py-4">
-              Create Your Account
-              <ChevronRight className="w-5 h-5" />
-            </Link>
-            <Link to="/connect" className="btn-ghost text-base px-8 py-4">
-              How to Connect
-            </Link>
-          </div>
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <button style={{ 
+            padding: '12px 24px', 
+            backgroundColor: '#d4af37', 
+            color: '#0f0f10', 
+            border: 'none', 
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            borderRadius: '4px',
+            fontSize: '16px'
+          }}>
+            Create Your Account
+          </button>
+          <button style={{ 
+            padding: '12px 24px', 
+            backgroundColor: 'transparent', 
+            color: '#d4af37', 
+            border: '1px solid #d4af37', 
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            borderRadius: '4px',
+            fontSize: '16px'
+          }}>
+            How to Connect
+          </button>
         </div>
-
-        <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-dark-600 to-transparent" />
-      </section>
+      </div>
 
       {/* Stats Bar */}
-      <section className="relative -mt-10 z-20 px-4">
-        <div className="max-w-5xl mx-auto card p-6 md:p-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            <div>
-              <div className="flex items-center justify-center mb-2">
-                <Activity className="w-6 h-6 text-gold-400" />
-              </div>
-              <p className="font-display text-2xl md:text-3xl font-bold text-gold-300">
-                {loading ? '—' : totalPlayers.toLocaleString()}
-              </p>
-              <p className="text-stone-500 text-xs uppercase tracking-wider mt-1">Players Online</p>
-            </div>
-            <div>
-              <div className="flex items-center justify-center mb-2">
-                <Users className="w-6 h-6 text-gold-400" />
-              </div>
-              <p className="font-display text-2xl md:text-3xl font-bold text-gold-300">
-                {loading ? '—' : (infoMap.total_accounts ?? '—')}
-              </p>
-              <p className="text-stone-500 text-xs uppercase tracking-wider mt-1">Total Accounts</p>
-            </div>
-            <div>
-              <div className="flex items-center justify-center mb-2">
-                <Globe className="w-6 h-6 text-gold-400" />
-              </div>
-              <p className="font-display text-2xl md:text-3xl font-bold text-gold-300">
-                {loading ? '—' : (infoMap.discord_members ?? '—')}
-              </p>
-              <p className="text-stone-500 text-xs uppercase tracking-wider mt-1">Discord Members</p>
-            </div>
-            <div>
-              <div className="flex items-center justify-center mb-2">
-                <Server className="w-6 h-6 text-gold-400" />
-              </div>
-              <p className="font-display text-2xl md:text-3xl font-bold text-gold-300">
-                {loading ? '—' : '99.9%'}
-              </p>
-              <p className="text-stone-500 text-xs uppercase tracking-wider mt-1">Uptime</p>
-            </div>
+      <div style={{ 
+        marginTop: '-40px',
+        marginBottom: '60px',
+        padding: '32px',
+        backgroundColor: 'rgba(30, 30, 33, 0.8)',
+        border: '1px solid rgba(212, 175, 55, 0.15)',
+        borderRadius: '8px',
+        maxWidth: '1000px',
+        margin: '-40px auto 60px'
+      }}>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
+          gap: '24px',
+          textAlign: 'center'
+        }}>
+          <div>
+            <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#d4af37', marginBottom: '8px' }}>
+              {loading ? '—' : displayTotalPlayers.toLocaleString()}
+            </p>
+            <p style={{ fontSize: '12px', color: '#606060', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Players Online
+            </p>
+          </div>
+          <div>
+            <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#d4af37', marginBottom: '8px' }}>
+              {loading ? '—' : (infoMap.total_accounts ?? '—')}
+            </p>
+            <p style={{ fontSize: '12px', color: '#606060', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Total Accounts
+            </p>
+          </div>
+          <div>
+            <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#d4af37', marginBottom: '8px' }}>
+              {loading ? '—' : (infoMap.discord_members ?? '—')}
+            </p>
+            <p style={{ fontSize: '12px', color: '#606060', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Discord Members
+            </p>
+          </div>
+          <div>
+            <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#d4af37', marginBottom: '8px' }}>
+              {loading ? '—' : '99.9%'}
+            </p>
+            <p style={{ fontSize: '12px', color: '#606060', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              Uptime
+            </p>
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* Features */}
-      <section className="py-20 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="section-title">Why Azeroth Eternal?</h2>
-            <p className="section-subtitle">A premium blizzlike WotLK experience built by passionate developers</p>
-            <div className="divider-gold max-w-xs mx-auto mt-6" />
+      {/* Realm Status Preview */}
+      <div style={{ marginBottom: '60px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '24px' }}>
+          <div>
+            <h2 style={{ fontSize: '32px', fontWeight: 'bold', color: '#d4af37', marginBottom: '8px' }}>
+              Realm Status
+            </h2>
+            <p style={{ color: '#a0a0a0', fontSize: '16px' }}>
+              Check the status of all our game realms
+            </p>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((f, i) => (
-              <div
-                key={i}
-                className="card card-hover p-6 animate-fade-in-up"
-                style={{ animationDelay: `${i * 80}ms` }}
-              >
-                <div className="w-12 h-12 flex items-center justify-center bg-gold-500/10 border border-gold-500/20 rounded-lg mb-4">
-                  <f.icon className="w-6 h-6 text-gold-400" />
+        {loading ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+            {[0, 1, 2].map((i) => (
+              <div key={i} style={{ 
+                padding: '24px', 
+                backgroundColor: 'rgba(30, 30, 33, 0.8)', 
+                border: '1px solid rgba(212, 175, 55, 0.15)',
+                borderRadius: '8px',
+                height: '150px'
+              }} />
+            ))}
+          </div>
+        ) : realms.length === 0 ? (
+          <div style={{ 
+            padding: '48px', 
+            textAlign: 'center', 
+            backgroundColor: 'rgba(30, 30, 33, 0.8)', 
+            border: '1px solid rgba(212, 175, 55, 0.15)',
+            borderRadius: '8px'
+          }}>
+            <p style={{ color: '#a0a0a0', fontSize: '16px' }}>
+              No realms currently configured. Add realms in the database to see them here.
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+            {realms.map((realm) => (
+              <div key={realm.id} style={{ 
+                padding: '24px', 
+                backgroundColor: 'rgba(30, 30, 33, 0.8)', 
+                border: '1px solid rgba(212, 175, 55, 0.15)',
+                borderRadius: '8px',
+                transition: 'all 0.3s'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#d4af37' }}>
+                    {realm.name}
+                  </h3>
+                  <span style={{ 
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '4px 12px',
+                    borderRadius: '12px',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    backgroundColor: realm.online ? 'rgba(74, 222, 128, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                    color: realm.online ? '#4ade80' : '#ef4444'
+                  }}>
+                    <span style={{ 
+                      width: '6px', 
+                      height: '6px', 
+                      borderRadius: '50%', 
+                      backgroundColor: realm.online ? '#4ade80' : '#ef4444' 
+                    }} />
+                    {realm.online ? 'Online' : 'Offline'}
+                  </span>
                 </div>
-                <h3 className="font-display text-lg font-bold text-gold-200 mb-2">{f.title}</h3>
-                <p className="text-stone-400 text-sm leading-relaxed">{f.desc}</p>
+                <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+                  <span style={{ color: '#a0a0a0', fontSize: '14px' }}>{realm.type}</span>
+                  <span style={{ color: '#606060' }}>·</span>
+                  <span style={{ color: '#a0a0a0', fontSize: '14px' }}>{realm.expansion}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                  <div>
+                    <span style={{ color: '#606060', fontSize: '12px', display: 'block' }}>Players</span>
+                    <span style={{ color: '#d4af37', fontWeight: 'bold' }}>
+                      {realm.players_online} / {realm.max_players}
+                    </span>
+                  </div>
+                  <div>
+                    <span style={{ color: '#606060', fontSize: '12px', display: 'block' }}>Uptime</span>
+                    <span style={{ color: '#d4af37', fontWeight: 'bold' }}>{realm.uptime}</span>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        )}
+      </div>
 
-      {/* Realm Status Preview */}
-      <section className="py-16 px-4 bg-dark-700/50">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-end justify-between mb-8">
-            <div>
-              <h2 className="section-title">Realm Status</h2>
-              <p className="section-subtitle">Check the status of all our game realms</p>
-            </div>
-            <Link to="/realms" className="hidden sm:flex items-center gap-1 text-gold-400 hover:text-gold-300 text-sm font-medium transition-colors">
-              View All <ChevronRight className="w-4 h-4" />
-            </Link>
-          </div>
-
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[0, 1, 2].map((i) => (
-                <div key={i} className="card p-6 animate-pulse h-56" />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {realms.slice(0, 3).map((realm) => (
-                <RealmCard key={realm.id} realm={realm} />
-              ))}
-            </div>
-          )}
-
-          <div className="text-center mt-8 sm:hidden">
-            <Link to="/realms" className="btn-ghost text-sm">View All Realms</Link>
-          </div>
-        </div>
-      </section>
-
-      {/* News Preview */}
-      <section className="py-20 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-end justify-between mb-8">
-            <div>
-              <h2 className="section-title">Latest News</h2>
-              <p className="section-subtitle">Stay up to date with server announcements</p>
-            </div>
-            <Link to="/news" className="hidden sm:flex items-center gap-1 text-gold-400 hover:text-gold-300 text-sm font-medium transition-colors">
-              All News <ChevronRight className="w-4 h-4" />
-            </Link>
-          </div>
-
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[0, 1, 2].map((i) => (
-                <div key={i} className="card h-80 animate-pulse" />
-              ))}
-            </div>
-          ) : news.length === 0 ? (
-            <p className="text-stone-500 text-center py-12">No news articles yet.</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {news.map((article) => (
-                <NewsCard key={article.id} article={article} />
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-20 px-4">
-        <div className="max-w-4xl mx-auto text-center card p-12 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-gold-500/5 to-ember-500/5" />
-          <div className="relative z-10">
-            <Shield className="w-12 h-12 text-gold-400 mx-auto mb-4" />
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-gold-200 mb-4">
-              Ready to Begin Your Adventure?
+      {/* Latest News */}
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '24px' }}>
+          <div>
+            <h2 style={{ fontSize: '32px', fontWeight: 'bold', color: '#d4af37', marginBottom: '8px' }}>
+              Latest News
             </h2>
-            <p className="text-stone-400 mb-8 max-w-xl mx-auto">
-              Create your free account in seconds and join thousands of players in Northrend.
-              Your journey to the Frozen Throne starts here.
+            <p style={{ color: '#a0a0a0', fontSize: '16px' }}>
+              Stay updated with the latest server announcements
             </p>
-            <Link to="/register" className="btn-gold text-base px-10 py-4">
-              Create Free Account
-              <ChevronRight className="w-5 h-5" />
-            </Link>
           </div>
         </div>
-      </section>
+
+        {loading ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+            {[0, 1, 2].map((i) => (
+              <div key={i} style={{ 
+                padding: '24px', 
+                backgroundColor: 'rgba(30, 30, 33, 0.8)', 
+                border: '1px solid rgba(212, 175, 55, 0.15)',
+                borderRadius: '8px',
+                height: '200px'
+              }} />
+            ))}
+          </div>
+        ) : news.length === 0 ? (
+          <div style={{ 
+            padding: '48px', 
+            textAlign: 'center', 
+            backgroundColor: 'rgba(30, 30, 33, 0.8)', 
+            border: '1px solid rgba(212, 175, 55, 0.15)',
+            borderRadius: '8px'
+          }}>
+            <p style={{ color: '#a0a0a0', fontSize: '16px' }}>
+              No news articles published yet. Check back soon for updates!
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+            {news.map((article) => (
+              <div key={article.id} style={{ 
+                padding: '24px', 
+                backgroundColor: 'rgba(30, 30, 33, 0.8)', 
+                border: '1px solid rgba(212, 175, 55, 0.15)',
+                borderRadius: '8px',
+                transition: 'all 0.3s'
+              }}>
+                <div style={{ marginBottom: '12px' }}>
+                  <span style={{ 
+                    display: 'inline-block',
+                    padding: '4px 12px',
+                    borderRadius: '12px',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    backgroundColor: 'rgba(212, 175, 55, 0.2)',
+                    color: '#d4af37',
+                    marginBottom: '8px'
+                  }}>
+                    {article.category}
+                  </span>
+                </div>
+                <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#e5c56d', marginBottom: '8px' }}>
+                  {article.title}
+                </h3>
+                {article.excerpt && (
+                  <p style={{ color: '#a0a0a0', fontSize: '14px', lineHeight: '1.6', marginBottom: '16px' }}>
+                    {article.excerpt}
+                  </p>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', color: '#606060' }}>
+                  <span>{article.author}</span>
+                  <span>{new Date(article.published_at).toLocaleDateString()}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

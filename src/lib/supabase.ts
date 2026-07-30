@@ -3,18 +3,9 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
-}
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-  },
-});
-
-export type Realm = {
+export interface Realm {
   id: string;
   name: string;
   type: string;
@@ -25,38 +16,33 @@ export type Realm = {
   players_online: number;
   max_players: number;
   uptime: string;
-  description: string | null;
+  description: string;
   display_order: number;
   updated_at: string;
-};
+}
 
-export type NewsArticle = {
+export interface NewsArticle {
   id: string;
   title: string;
-  slug: string;
-  excerpt: string | null;
-  content: string | null;
-  category: string;
-  author: string;
-  image_url: string | null;
+  content: string;
   is_published: boolean;
   published_at: string;
   created_at: string;
-};
+}
 
-export type ServerInfo = {
-  id: string;
+export interface ServerInfo {
   key: string;
   label: string;
   value: string;
   category: string;
   display_order: number;
-};
+}
 
-export type GameAccount = {
+export interface GameAccount {
   id: string;
   user_id: string;
   account_name: string;
   expansion: string;
   created_at: string;
-};
+  updated_at: string;
+}

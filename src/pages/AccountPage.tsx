@@ -1,234 +1,360 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
-import {
-  Shield, Mail, Calendar, Server, Plus, Loader2, AlertCircle,
-  CheckCircle2, Gamepad2, Clock,
-} from 'lucide-react';
 import { useAuth } from '@/lib/auth';
-import { supabase, type GameAccount, type Realm } from '@/lib/supabase';
+import { supabase, type GameAccount } from '@/lib/supabase';
 
 export default function AccountPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, signOut } = useAuth();
   const [gameAccounts, setGameAccounts] = useState<GameAccount[]>([]);
-  const [realms, setRealms] = useState<Realm[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [newExpansion, setNewExpansion] = useState('WotLK 3.3.5a');
-  const [formError, setFormError] = useState<string | null>(null);
-  const [formLoading, setFormLoading] = useState(false);
-
-  const fetchData = async () => {
-    if (!user) return;
-    const [accRes, realmRes] = await Promise.all([
-      supabase.from('game_accounts').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
-      supabase.from('realms').select('*').order('display_order'),
-    ]);
-    setGameAccounts(accRes.data ?? []);
-    setRealms(realmRes.data ?? []);
-    setLoading(false);
-  };
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newAccountName, setNewAccountName] = useState('');
+  const [newAccountExpansion, setNewAccountExpansion] = useState('WotLK 3.3.5a');
+  const [addError, setAddError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchData();
+    if (user) {
+      fetchGameAccounts();
+    }
   }, [user]);
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError(null);
-    if (!user) return;
-    if (newName.trim().length < 3) {
-      setFormError('Account name must be at least 3 characters.');
-      return;
-    }
-    if (!/^[a-zA-Z0-9_]+$/.test(newName.trim())) {
-      setFormError('Account name can only contain letters, numbers, and underscores.');
-      return;
-    }
-    setFormLoading(true);
-    const { error } = await supabase
-      .from('game_accounts')
-      .insert({ account_name: newName.trim(), expansion: newExpansion });
-    setFormLoading(false);
-    if (error) {
-      setFormError(error.message);
-    } else {
-      setNewName('');
-      setShowForm(false);
-      fetchData();
+  const fetchGameAccounts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('game_accounts')
+        .select('*')
+        .eq('user_id', user?.id);
+      
+      if (error) throw error;
+      setGameAccounts(data ?? []);
+    } catch (err) {
+      console.error('Error fetching game accounts:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (authLoading) {
+  const handleAddGameAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddError(null);
+
+    if (!newAccountName.trim()) {
+      setAddError('Account name is required');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('game_accounts')
+        .insert({
+          user_id: user?.id,
+          account_name: newAccountName,
+          expansion: newAccountExpansion
+        });
+
+      if (error) throw error;
+
+      setNewAccountName('');
+      setShowAddForm(false);
+      fetchGameAccounts();
+    } catch (err) {
+      setAddError('Failed to add game account');
+      console.error('Error adding game account:', err);
+    }
+  };
+
+  const handleDeleteGameAccount = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('game_accounts')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      fetchGameAccounts();
+    } catch (err) {
+      console.error('Error deleting game account:', err);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
+  if (!user) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-gold-400 animate-spin" />
+      <div style={{ padding: '40px 20px', color: 'white', textAlign: 'center' }}>
+        <h1 style={{ fontSize: '36px', fontWeight: 'bold', color: '#d4af37', marginBottom: '16px' }}>
+          Not Signed In
+        </h1>
+        <p style={{ color: '#a0a0a0', fontSize: '16px' }}>
+          Please sign in to view your account
+        </p>
       </div>
     );
   }
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  const memberSince = new Date(user.created_at).toLocaleDateString('en-US', {
-    year: 'numeric', month: 'long', day: 'numeric',
-  });
-
   return (
-    <div className="max-w-5xl mx-auto px-4 py-16">
-      {/* Profile Header */}
-      <div className="card p-8 mb-8 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-gold-500/5 to-transparent" />
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-6">
-          <div className="w-20 h-20 flex items-center justify-center bg-gold-500/10 border border-gold-500/30 rounded-lg flex-shrink-0">
-            <Shield className="w-10 h-10 text-gold-400" />
-          </div>
-          <div className="flex-1">
-            <h1 className="font-display text-2xl font-bold text-gold-200 mb-1">My Account</h1>
-            <div className="flex flex-wrap items-center gap-4 text-sm text-stone-400">
-              <span className="flex items-center gap-1.5"><Mail className="w-4 h-4" /> {user.email}</span>
-              <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> Member since {memberSince}</span>
+    <div style={{ padding: '40px 20px', color: 'white' }}>
+      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+        <div style={{ marginBottom: '40px' }}>
+          <h1 style={{ fontSize: '48px', fontWeight: 'bold', color: '#d4af37', marginBottom: '16px' }}>
+            My Account
+          </h1>
+          <p style={{ color: '#a0a0a0', fontSize: '18px' }}>
+            Manage your account and game accounts
+          </p>
+        </div>
+
+        {/* Account Info */}
+        <div style={{ 
+          padding: '32px', 
+          backgroundColor: 'rgba(30, 30, 33, 0.8)', 
+          border: '1px solid rgba(212, 175, 55, 0.15)',
+          borderRadius: '8px',
+          marginBottom: '32px'
+        }}>
+          <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#d4af37', marginBottom: '24px' }}>
+            Account Information
+          </h2>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+            <div>
+              <span style={{ color: '#606060', fontSize: '12px', display: 'block', marginBottom: '4px' }}>EMAIL</span>
+              <span style={{ color: '#a0a0a0', fontSize: '16px' }}>{user.email}</span>
+            </div>
+            <div>
+              <span style={{ color: '#606060', fontSize: '12px', display: 'block', marginBottom: '4px' }}>USER ID</span>
+              <span style={{ color: '#a0a0a0', fontSize: '14px', fontFamily: 'monospace' }}>{user.id.slice(0, 8)}...</span>
+            </div>
+            <div>
+              <span style={{ color: '#606060', fontSize: '12px', display: 'block', marginBottom: '4px' }}>EMAIL VERIFIED</span>
+              <span style={{ 
+                color: user.email_confirmed_at ? '#4ade80' : '#fca5a5',
+                fontSize: '16px'
+              }}>
+                {user.email_confirmed_at ? '✓ Verified' : '✗ Not Verified'}
+              </span>
+            </div>
+            <div>
+              <span style={{ color: '#606060', fontSize: '12px', display: 'block', marginBottom: '4px' }}>MEMBER SINCE</span>
+              <span style={{ color: '#a0a0a0', fontSize: '16px' }}>
+                {new Date(user.created_at).toLocaleDateString()}
+              </span>
             </div>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/30 rounded-sm">
-            <CheckCircle2 className="w-4 h-4 text-green-400" />
-            <span className="text-green-400 text-sm font-medium">Active</span>
+
+          <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid rgba(212, 175, 55, 0.1)' }}>
+            <button
+              onClick={handleSignOut}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: 'transparent',
+                color: '#ef4444',
+                border: '1px solid #ef4444',
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: 'pointer'
+              }}
+            >
+              Sign Out
+            </button>
           </div>
         </div>
-      </div>
 
-      {/* Game Accounts */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display text-xl font-bold text-gold-200 flex items-center gap-2">
-            <Gamepad2 className="w-5 h-5 text-gold-400" />
-            Game Accounts
-          </h2>
-          {!showForm && (
+        {/* Game Accounts */}
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '24px', fontWeight: 'bold', color: '#d4af37' }}>
+              Game Accounts
+            </h2>
             <button
-              onClick={() => setShowForm(true)}
-              className="flex items-center gap-1.5 text-sm text-gold-400 hover:text-gold-300 transition-colors"
+              onClick={() => setShowAddForm(!showAddForm)}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: '#d4af37',
+                color: '#0f0f10',
+                border: 'none',
+                borderRadius: '4px',
+                fontSize: '14px',
+                fontWeight: 'bold',
+                cursor: 'pointer'
+              }}
             >
-              <Plus className="w-4 h-4" /> Add Account
+              {showAddForm ? 'Cancel' : '+ Add Game Account'}
             </button>
-          )}
-        </div>
+          </div>
 
-        {showForm && (
-          <form onSubmit={handleCreate} className="card p-6 mb-4 animate-fade-in-up">
-            {formError && (
-              <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-sm text-red-400 text-sm mb-4">
-                <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <span>{formError}</span>
-              </div>
-            )}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {showAddForm && (
+            <form onSubmit={handleAddGameAccount} style={{ 
+              padding: '24px', 
+              backgroundColor: 'rgba(30, 30, 33, 0.8)', 
+              border: '1px solid rgba(212, 175, 55, 0.15)',
+              borderRadius: '8px',
+              marginBottom: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px'
+            }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#d4af37', marginBottom: '8px' }}>
+                Add New Game Account
+              </h3>
+              
+              {addError && (
+                <div style={{ 
+                  padding: '12px', 
+                  backgroundColor: 'rgba(239, 68, 68, 0.2)', 
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  borderRadius: '4px',
+                  fontSize: '14px',
+                  color: '#fca5a5'
+                }}>
+                  {addError}
+                </div>
+              )}
+
               <div>
-                <label className="block text-sm font-medium text-gold-300 mb-1.5">Account Name</label>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#a0a0a0' }}>
+                  Account Name
+                </label>
                 <input
                   type="text"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  className="input-field"
+                  value={newAccountName}
+                  onChange={(e) => setNewAccountName(e.target.value)}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    backgroundColor: 'rgba(30, 30, 33, 0.8)',
+                    border: '1px solid rgba(212, 175, 55, 0.2)',
+                    borderRadius: '4px',
+                    color: 'white',
+                    fontSize: '14px'
+                  }}
                   placeholder="Your in-game account name"
-                  maxLength={32}
                 />
-                <p className="text-xs text-stone-500 mt-1">Letters, numbers, and underscores only.</p>
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-gold-300 mb-1.5">Expansion</label>
+                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#a0a0a0' }}>
+                  Expansion
+                </label>
                 <select
-                  value={newExpansion}
-                  onChange={(e) => setNewExpansion(e.target.value)}
-                  className="input-field"
+                  value={newAccountExpansion}
+                  onChange={(e) => setNewAccountExpansion(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    backgroundColor: 'rgba(30, 30, 33, 0.8)',
+                    border: '1px solid rgba(212, 175, 55, 0.2)',
+                    borderRadius: '4px',
+                    color: 'white',
+                    fontSize: '14px'
+                  }}
                 >
-                  <option>WotLK 3.3.5a</option>
+                  <option value="WotLK 3.3.5a">WotLK 3.3.5a</option>
+                  <option value="Cataclysm 4.3.4">Cataclysm 4.3.4</option>
+                  <option value="Mists of Pandaria 5.4.8">Mists of Pandaria 5.4.8</option>
                 </select>
               </div>
-            </div>
-            <div className="flex gap-3 mt-4">
-              <button type="submit" disabled={formLoading} className="btn-gold text-sm py-2.5 disabled:opacity-50">
-                {formLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create'}
-              </button>
-              <button
-                type="button"
-                onClick={() => { setShowForm(false); setFormError(null); setNewName(''); }}
-                className="btn-ghost text-sm py-2.5"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        )}
 
-        {loading ? (
-          <div className="card p-6 animate-pulse h-24" />
-        ) : gameAccounts.length === 0 ? (
-          <div className="card p-8 text-center">
-            <Gamepad2 className="w-10 h-10 text-stone-600 mx-auto mb-3" />
-            <p className="text-stone-400 mb-2">You don't have any game accounts yet.</p>
-            <p className="text-stone-500 text-sm">Create one to register it on the game server.</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {gameAccounts.map((acc) => (
-              <div key={acc.id} className="card p-5 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 flex items-center justify-center bg-frost-500/10 border border-frost-500/20 rounded-lg">
-                    <Gamepad2 className="w-5 h-5 text-frost-300" />
-                  </div>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  type="submit"
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: '#d4af37',
+                    color: '#0f0f10',
+                    border: 'none',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Add Account
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAddForm(false)}
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: 'transparent',
+                    color: '#a0a0a0',
+                    border: '1px solid #606060',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+
+          {loading ? (
+            <div style={{ padding: '48px', textAlign: 'center', color: '#a0a0a0' }}>
+              Loading game accounts...
+            </div>
+          ) : gameAccounts.length === 0 ? (
+            <div style={{ 
+              padding: '48px', 
+              textAlign: 'center', 
+              backgroundColor: 'rgba(30, 30, 33, 0.8)', 
+              border: '1px solid rgba(212, 175, 55, 0.15)',
+              borderRadius: '8px'
+            }}>
+              <p style={{ color: '#a0a0a0', fontSize: '16px', marginBottom: '16px' }}>
+                No game accounts linked to your account yet.
+              </p>
+              <p style={{ color: '#606060', fontSize: '14px' }}>
+                Add a game account to get started playing on our realms.
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gap: '16px' }}>
+              {gameAccounts.map((account) => (
+                <div key={account.id} style={{ 
+                  padding: '24px', 
+                  backgroundColor: 'rgba(30, 30, 33, 0.8)', 
+                  border: '1px solid rgba(212, 175, 55, 0.15)',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
                   <div>
-                    <p className="font-display font-bold text-gold-200">{acc.account_name}</p>
-                    <p className="text-stone-500 text-xs">{acc.expansion}</p>
+                    <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#d4af37', marginBottom: '8px' }}>
+                      {account.account_name}
+                    </h3>
+                    <div style={{ display: 'flex', gap: '16px', fontSize: '14px', color: '#a0a0a0' }}>
+                      <span>{account.expansion}</span>
+                      <span>•</span>
+                      <span>Added {new Date(account.created_at).toLocaleDateString()}</span>
+                    </div>
                   </div>
+                  <button
+                    onClick={() => handleDeleteGameAccount(account.id)}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: 'transparent',
+                      color: '#ef4444',
+                      border: '1px solid #ef4444',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Remove
+                  </button>
                 </div>
-                <div className="text-right">
-                  <p className="text-stone-400 text-xs flex items-center gap-1.5">
-                    <Clock className="w-3 h-3" />
-                    {new Date(acc.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Realm Quick Access */}
-      <div>
-        <h2 className="font-display text-xl font-bold text-gold-200 flex items-center gap-2 mb-4">
-          <Server className="w-5 h-5 text-gold-400" />
-          Realm Status
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {realms.map((realm) => (
-            <div key={realm.id} className="card p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className={`w-2 h-2 rounded-full ${realm.online ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
-                <div>
-                  <p className="font-display font-medium text-gold-200 text-sm">{realm.name}</p>
-                  <p className="text-stone-500 text-xs">{realm.expansion} · {realm.type}</p>
-                </div>
-              </div>
-              <span className="text-stone-400 text-sm">{realm.players_online} online</span>
+              ))}
             </div>
-          ))}
+          )}
         </div>
-        <Link to="/realms" className="block text-center text-gold-400 hover:text-gold-300 text-sm mt-4 transition-colors">
-          View Full Realm Status →
-        </Link>
-      </div>
-
-      {/* Connection Reminder */}
-      <div className="card p-6 mt-8 bg-dark-300/50">
-        <h3 className="font-display font-bold text-gold-300 mb-2">How to Play</h3>
-        <p className="text-stone-400 text-sm leading-relaxed mb-3">
-          Set your realmlist to <code className="text-gold-300 font-mono bg-dark-500/60 px-1.5 py-0.5 rounded-sm">set realmlist logon.azeroth-eternal.com</code> in your WoW 3.3.5a client, then log in with your website email and password.
-        </p>
-        <Link to="/connect" className="text-gold-400 hover:text-gold-300 text-sm font-medium transition-colors">
-          Full Connection Guide →
-        </Link>
       </div>
     </div>
   );

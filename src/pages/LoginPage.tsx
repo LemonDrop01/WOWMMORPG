@@ -1,95 +1,152 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Shield, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 
 export default function LoginPage() {
-  const { signIn } = useAuth();
-  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const { signIn } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
-    const { error } = await signIn(email, password);
-    setLoading(false);
-    if (error) {
-      setError(error);
-    } else {
-      navigate('/account');
+
+    try {
+      const { error } = await signIn(email, password);
+      
+      if (error) {
+        setError(error);
+      } else {
+        navigate('/');
+      }
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
+      console.error('Login error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center px-4 py-16">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Shield className="w-12 h-12 text-gold-400 mx-auto mb-3" />
-          <h1 className="font-display text-3xl font-bold text-gold-200">Welcome Back</h1>
-          <p className="text-stone-400 mt-2">Sign in to your Azeroth Eternal account</p>
+    <div style={{ padding: '40px 20px', color: 'white' }}>
+      <div style={{ maxWidth: '400px', margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <h1 style={{ fontSize: '36px', fontWeight: 'bold', color: '#d4af37', marginBottom: '16px' }}>
+            Sign In
+          </h1>
+          <p style={{ color: '#a0a0a0', fontSize: '16px' }}>
+            Welcome back to Azeroth Eternal
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="card p-8 space-y-5">
-          {error && (
-            <div className="flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/30 rounded-sm text-red-400 text-sm">
-              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
+        {error && (
+          <div style={{ 
+            padding: '16px', 
+            backgroundColor: 'rgba(239, 68, 68, 0.2)', 
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            borderRadius: '6px',
+            marginBottom: '24px',
+            fontSize: '14px',
+            color: '#fca5a5'
+          }}>
+            {error}
+          </div>
+        )}
 
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div>
-            <label className="block text-sm font-medium text-gold-300 mb-1.5">Email Address</label>
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#a0a0a0' }}>
+              Email
+            </label>
             <input
               type="email"
-              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="input-field"
-              placeholder="adventurer@example.com"
+              required
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                backgroundColor: 'rgba(30, 30, 33, 0.8)',
+                border: '1px solid rgba(212, 175, 55, 0.2)',
+                borderRadius: '4px',
+                color: 'white',
+                fontSize: '14px',
+                opacity: loading ? 0.5 : 1
+              }}
+              placeholder="your@email.com"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gold-300 mb-1.5">Password</label>
-            <div className="relative">
-              <input
-                type={showPw ? 'text' : 'password'}
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="input-field pr-10"
-                placeholder="Your password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPw(!showPw)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-500 hover:text-gold-400"
-              >
-                {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: '#a0a0a0' }}>
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                backgroundColor: 'rgba(30, 30, 33, 0.8)',
+                border: '1px solid rgba(212, 175, 55, 0.2)',
+                borderRadius: '4px',
+                color: 'white',
+                fontSize: '14px',
+                opacity: loading ? 0.5 : 1
+              }}
+              placeholder="••••••••"
+            />
           </div>
 
-          <button type="submit" disabled={loading} className="btn-gold w-full py-3.5 disabled:opacity-50 disabled:cursor-not-allowed">
-            {loading ? (
-              <><Loader2 className="w-5 h-5 animate-spin" /> Signing In...</>
-            ) : (
-              'Sign In'
-            )}
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              width: '100%',
+              padding: '14px 24px',
+              backgroundColor: '#d4af37',
+              color: '#0f0f10',
+              border: 'none',
+              fontWeight: 'bold',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              borderRadius: '4px',
+              fontSize: '16px',
+              opacity: loading ? 0.7 : 1
+            }}
+          >
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
-        <p className="text-center text-stone-400 text-sm mt-6">
-          Don't have an account yet?{' '}
-          <Link to="/register" className="text-gold-400 hover:text-gold-300 font-medium">
-            Create one here
+        <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: '#a0a0a0' }}>
+          Don't have an account?{' '}
+          <Link to="/register" style={{ color: '#d4af37', textDecoration: 'none' }}>
+            Create one
           </Link>
-        </p>
+        </div>
+
+        <div style={{ 
+          marginTop: '32px', 
+          padding: '16px', 
+          backgroundColor: 'rgba(212, 175, 55, 0.1)', 
+          border: '1px solid rgba(212, 175, 55, 0.2)',
+          borderRadius: '6px',
+          fontSize: '12px',
+          color: '#a0a0a0'
+        }}>
+          <strong style={{ color: '#d4af37' }}>Trouble logging in?</strong> Make sure:<br/>
+          • Email confirmation is completed (if enabled)<br/>
+          • You're using the correct email and password<br/>
+          • Email authentication is enabled in Supabase
+        </div>
       </div>
     </div>
   );
