@@ -54,6 +54,11 @@ class WoWPasswordHasher {
 // Create game account
 async function createGameAccount(supabaseUserId, accountName, password, expansion = 'WotLK 3.3.5a') {
   try {
+    console.log('🎮 Starting game account creation...');
+    console.log('   Supabase User ID:', supabaseUserId);
+    console.log('   Account Name:', accountName);
+    console.log('   Expansion:', expansion);
+
     const connection = await gameDbPool.getConnection();
     
     try {
@@ -64,13 +69,18 @@ async function createGameAccount(supabaseUserId, accountName, password, expansio
       );
 
       if (existing.length > 0) {
+        console.log('❌ Account name already exists in game database');
         connection.release();
         return { success: false, error: 'Account name already exists' };
       }
 
+      console.log('✅ Account name available, generating SRP6 hash...');
+
       // Generate password hash using SRP6
       const hasher = new WoWPasswordHasher();
       const { salt, verifier } = hasher.generateVerifier(accountName, password);
+
+      console.log('✅ SRP6 hash generated, inserting into game database...');
 
       // Insert into account table (AzerothCore structure)
       const [result] = await connection.query(
@@ -79,7 +89,10 @@ async function createGameAccount(supabaseUserId, accountName, password, expansio
         [accountName, salt, verifier, expansion, null]
       );
 
+      console.log('✅ Game account created in database with ID:', result.insertId);
       connection.release();
+
+      console.log('🔗 Linking to Supabase user...');
 
       // Link to Supabase user
       const { error: supabaseError } = await supabase
@@ -92,9 +105,12 @@ async function createGameAccount(supabaseUserId, accountName, password, expansio
         });
 
       if (supabaseError) {
-        console.error('Error linking game account to Supabase:', supabaseError);
+        console.error('❌ Error linking game account to Supabase:', supabaseError);
+      } else {
+        console.log('✅ Successfully linked to Supabase');
       }
 
+      console.log('🎉 Game account creation completed successfully');
       return { 
         success: true, 
         accountId: result.insertId,
@@ -106,7 +122,7 @@ async function createGameAccount(supabaseUserId, accountName, password, expansio
       throw error;
     }
   } catch (error) {
-    console.error('Error creating game account:', error);
+    console.error('❌ Error creating game account:', error);
     return { success: false, error: 'Failed to create game account' };
   }
 }

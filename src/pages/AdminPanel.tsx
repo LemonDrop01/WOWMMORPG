@@ -159,7 +159,7 @@ export default function AdminPanel() {
                   Admin Panel
                 </h1>
                 <p style={{ color: '#a0a0a0', fontSize: '18px' }}>
-                  Manage your Azeroth Eternal server
+                  Manage your Rune Haven server
                 </p>
               </div>
             </div>

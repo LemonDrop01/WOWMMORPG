@@ -101,7 +101,7 @@ export default function RegisterPage() {
             Create Account
           </h1>
           <p style={{ color: '#a0a0a0', fontSize: '16px' }}>
-            Join thousands of players in Azeroth
+            Join thousands of players in Rune Haven
           </p>
         </div>
 

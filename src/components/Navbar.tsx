@@ -66,7 +66,7 @@ export default function Navbar() {
           }}
         >
           <span>🛡️</span>
-          <span>Azeroth Eternal</span>
+          <span>Rune Haven</span>
         </Link>
 
         <div style={{ display: 'flex', gap: '8px' }}>

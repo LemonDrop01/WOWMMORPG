@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "set-admin": "node scripts/setAdmin.js",
     "delete-admin": "node scripts/deleteAdmin.js",
-    "auto-admin": "node scripts/autoAdmin.js"
+    "auto-admin": "node scripts/autoAdmin.js",
+    "verify-email": "node scripts/verifyEmail.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",

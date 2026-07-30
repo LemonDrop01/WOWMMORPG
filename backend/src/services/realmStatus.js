@@ -90,7 +90,7 @@ async function getRealmStatusFromGameServer() {
       return {
         realms: realms.map(realm => ({
           id: realm.id.toString(),
-          name: realm.name,
+          name: realm.name || 'Rune Haven',
           host: realm.address,
           port: realm.port,
           type: getRealmType(realm.icon),
@@ -99,7 +99,7 @@ async function getRealmStatusFromGameServer() {
           players_online: onlineCharacters,
           max_players: getMaxPlayersForType(realm.icon),
           uptime: calculateUptime(),
-          description: `${realm.name} realm`,
+          description: `Rune Haven realm`,
           display_order: realm.id
         })),
         total_accounts: accountStats[0]?.total_accounts || 0
@@ -175,7 +175,7 @@ async function updateSupabaseRealmStatus() {
         .from('realms')
         .insert({
           id: uuidId,
-          name: realm.name,
+          name: 'Rune Haven',
           type: realm.type,
           expansion: realm.expansion,
           host: realm.host,
@@ -184,15 +184,15 @@ async function updateSupabaseRealmStatus() {
           players_online: realm.players_online,
           max_players: realm.max_players,
           uptime: realm.uptime,
-          description: realm.description,
+          description: 'Rune Haven realm',
           display_order: realm.display_order,
           updated_at: new Date().toISOString()
         });
 
       if (error) {
-        console.error(`Error updating realm ${realm.name}:`, error);
+        console.error(`Error updating realm Rune Haven:`, error);
       } else {
-        console.log(`✓ Updated realm status: ${realm.name} with ${realm.players_online} players online, online: ${realm.online}`);
+        console.log(`✓ Updated realm status: Rune Haven with ${realm.players_online} players online, online: ${realm.online}`);
       }
     }
 

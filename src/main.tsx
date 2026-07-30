@@ -27,6 +27,31 @@ style.textContent = `
     }
   }
   
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes glow {
+    0%, 100% { 
+      box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+    }
+    50% { 
+      box-shadow: 0 0 40px rgba(212, 175, 55, 0.6);
+    }
+  }
+  
   * {
     box-sizing: border-box;
   }
@@ -38,6 +63,16 @@ style.textContent = `
       sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Fantasy font for headings */
+  h1, h2, h3 {
+    font-family: 'Georgia', serif;
+  }
+  
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
   }
 `;
 document.head.appendChild(style);
